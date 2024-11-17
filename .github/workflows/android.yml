@@ -27,4 +27,4 @@ jobs:
        uses: actions/upload-artifact@v3
        with:
          name: libASI
-         path: ./libs/armeabi-v7a/libASILoader.so
+         path: libs/armeabi-v7a/*.so
