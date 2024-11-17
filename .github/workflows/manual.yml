@@ -1,0 +1,60 @@
+name: Android NDK Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      # Define Android SDK and NDK paths
+      ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
+      ANDROID_NDK_HOME: ${{ runner.temp }}/android-ndk
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '11'
+
+    - name: Download Android SDK
+      run: |
+        mkdir -p $ANDROID_SDK_ROOT
+        curl -o sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+        unzip -q sdk-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
+        mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
+
+    - name: Install SDK and NDK Packages
+      run: |
+        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
+          "platform-tools" \
+          "platforms;android-30" \
+          "ndk;21.3.6528147"
+
+    - name: Set up Android NDK
+      run: echo "ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/21.3.6528147" >> $GITHUB_ENV
+
+    - name: Accept Licenses
+      run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+
+    - name: Build with ndk-build
+      run: |
+        cd ./src/
+        $ANDROID_NDK_HOME/ndk-build
+
+    - name: Upload .so files as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: native-libraries
+        path: ./libs
