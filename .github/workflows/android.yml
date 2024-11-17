@@ -20,9 +20,6 @@ jobs:
        with:
          ndk-version: r26d
 
-     - name: Patch
-       run: patch -p1 < ./src/patches/WarMedia.patch
-
      - name: Build .so
        run: ndk-build NDK_PROJECT_PATH=./src APP_BUILD_SCRIPT=./src/Android.mk NDK_APPLICATION_MK=./src/Application.mk
 
